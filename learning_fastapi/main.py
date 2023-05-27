@@ -1,16 +1,11 @@
 from enum import Enum
 from typing import Annotated, Union
 
-from fastapi import FastAPI, Path, Query
-from pydantic import BaseModel
+from fastapi import Body, FastAPI, Path, Query
+from pydantic import BaseModel, Field
 
 app = FastAPI()
-
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
+app.openapi_version
 
 
 @app.get("/")
@@ -58,9 +53,36 @@ async def read_items(
     return results
 
 
+class Item(BaseModel):
+    name: str
+    price: float
+    description: str | None = Field(
+        default=None, title="The description of the item", max_length=300
+    )
+    price: float = Field(gt=0, description="The price must be greater than zero")
+    is_offer: Union[bool, None] = None
+
+
 @app.put("/items/{item_id}")
 def update_item(item_id: int, item: Item):
     return {"item_name": item.name, "item_id": item_id}
+
+
+class User(BaseModel):
+    username: str
+    full_name: str | None = None
+
+
+@app.put("/multi_body")
+async def multi_body(
+    item: Item,
+    user: User,
+    # Use Body to add more top level fields to tho body
+    importance: Annotated[int, Body(gt=0)],
+):
+    # if multiple params are models, then they will be nested to form the body
+    results = {"item": item, "user": user, "importance": importance}
+    return results
 
 
 class ModelName(str, Enum):  # str is needed for docs
