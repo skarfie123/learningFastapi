@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Union
+from typing import Annotated, Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -19,10 +19,28 @@ def read_root():
 
 
 @app.get("/items/{item_id}")
-async def read_item(item_id: str, q: str | None = None, short: bool = False):
-    item = {"item_id": item_id}
-    if q:
-        item.update({"q": q})
+async def read_item(
+    item_id: str,
+    q: str | None = None,
+    short: bool = False,
+    # validate the string when provided
+    q_2: Annotated[
+        str | None, Query(min_length=3, max_length=50, regex="^\d+query$")
+    ] = None,
+    # for an array, the annotation is necessary
+    # now you can provide multiple values: ?q_list=1&q_list=2
+    q_list: Annotated[list[str] | None, Query()] = None,
+    q_doc: Annotated[
+        list[str] | None,
+        Query(
+            alias="item-query",  # this useful for example because python names cannot have `-`
+            title="Query Param Title",
+            description="Query Param Description",
+            deprecated=True,
+        ),
+    ] = None,
+):
+    item = {"item_id": item_id, "q": q, "q_2": q_2, "q_list": q_list, "q_doc": q_doc}
 
     # short parsed as True if given [true, True, 1, on, yes], case insensitive
     if not short:
