@@ -1,1 +1,1 @@
-﻿docker run -it --rm --name lfapi -p 80:80 lfapi
+﻿docker run -it --rm --name lfapi -p 8000:80 lfapi

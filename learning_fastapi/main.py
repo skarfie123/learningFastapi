@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Annotated, Union
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Path, Query
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -44,10 +44,18 @@ async def read_item(
 
     # short parsed as True if given [true, True, 1, on, yes], case insensitive
     if not short:
-        item.update(
-            {"description": "This is an amazing item that has a long description"}
-        )
+        item.update({"description": "a long description"})
     return item
+
+
+# Path also has all the metadata that Query has
+@app.get("/items/{item_id}")
+async def read_items(
+    item_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    size: Annotated[float, Query(gt=0, lt=10.5)],
+):
+    results = {"item_id": item_id, "size": size}
+    return results
 
 
 @app.put("/items/{item_id}")
@@ -65,10 +73,8 @@ class ModelName(str, Enum):  # str is needed for docs
 async def get_model(model_name: ModelName):
     if model_name is ModelName.alexnet:
         return {"model_name": model_name, "message": "Deep Learning FTW!"}
-
     if model_name.value == "lenet":
         return {"model_name": model_name, "message": "LeCNN all the images"}
-
     return {"model_name": model_name, "message": "Have some residuals"}
 
 
