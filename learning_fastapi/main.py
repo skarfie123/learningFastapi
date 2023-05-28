@@ -2,10 +2,9 @@ from enum import Enum
 from typing import Annotated, Union
 
 from fastapi import Body, FastAPI, Path, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 
 app = FastAPI()
-app.openapi_version
 
 
 @app.get("/")
@@ -53,6 +52,11 @@ async def read_items(
     return results
 
 
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+
+
 class Item(BaseModel):
     name: str
     price: float
@@ -61,6 +65,8 @@ class Item(BaseModel):
     )
     price: float = Field(gt=0, description="The price must be greater than zero")
     is_offer: Union[bool, None] = None
+    tags: set[str] = set()
+    images: list[Image] | None = None
 
 
 @app.put("/items/{item_id}")
@@ -103,3 +109,28 @@ async def get_model(model_name: ModelName):
 @app.get("/files/{file_path:path}")  # allow paths with `/` with `:path`
 async def read_file(file_path: str):
     return {"file_path": file_path}
+
+
+class Offer(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    # arbitrarily deep nesting
+    items: list[Item]
+
+
+@app.post("/offers/")
+async def create_offer(offer: Offer):
+    return offer
+
+
+@app.post("/images/multiple/")
+# top level of body doesn't have to be a model
+async def create_multiple_images(images: list[Image]):
+    return images
+
+
+@app.post("/index-weights/")
+# dicts can still be used for the body
+async def create_index_weights(weights: dict[int, float], blob: dict):
+    return weights, blob
