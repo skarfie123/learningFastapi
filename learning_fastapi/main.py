@@ -237,3 +237,9 @@ async def upload_item4(
 ):
     results = {"item_id": item_id, "item_4": item_4}
     return results
+
+
+# more types
+# - https://fastapi.tiangolo.com/tutorial/extra-data-types/#other-data-types
+# - https://docs.pydantic.dev/latest/usage/types/#pydantic-types
+# - https://docs.pydantic.dev/latest/usage/types/#custom-data-types
