@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Annotated, Union
 
-from fastapi import Body, FastAPI, Path, Query
+from fastapi import Body, Cookie, FastAPI, Header, Path, Query
 from pydantic import BaseModel, Field, HttpUrl
 
 app = FastAPI()
@@ -243,3 +243,15 @@ async def upload_item4(
 # - https://fastapi.tiangolo.com/tutorial/extra-data-types/#other-data-types
 # - https://docs.pydantic.dev/latest/usage/types/#pydantic-types
 # - https://docs.pydantic.dev/latest/usage/types/#custom-data-types
+
+
+@app.get("/headers")
+async def headers(
+    cookie: Annotated[str, Cookie()],
+    some_number: Annotated[int, Header()],
+    more_numbers: Annotated[list[int] | None, Header()] = None,
+):
+    # Headers are case insensitive, and by convention use hyphens not underscores
+    # Cookies are just a special header:
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie
+    return {"cookie": cookie, "Some-Number": some_number, "more_numbers": more_numbers}
