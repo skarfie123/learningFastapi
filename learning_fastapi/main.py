@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Annotated, Any, Union
 
-from fastapi import Body, Cookie, FastAPI, Header, Path, Query, Response
+from fastapi import Body, Cookie, FastAPI, Header, Path, Query, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
@@ -351,3 +351,12 @@ async def read_item2():
     # - response_model_exclude
     # - response_model_include
     return {"name": "Foo", "price": 50.2}
+
+
+# provide the default status code with one of
+# - int
+# - fastapi.status
+# - http.HTTPStatus
+@app.post("/item", status_code=status.HTTP_201_CREATED)
+async def create_item(name: str):
+    return {"name": name}
