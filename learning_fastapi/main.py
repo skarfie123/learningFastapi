@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import Annotated, Union
+from typing import Annotated, Any, Union
 
-from fastapi import Body, Cookie, FastAPI, Header, Path, Query
-from pydantic import BaseModel, Field, HttpUrl
+from fastapi import Body, Cookie, FastAPI, Header, Path, Query, Response
+from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 app = FastAPI()
 
@@ -12,7 +13,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
+@app.get("/item/{item_id}")
 async def read_item(
     item_id: str,
     q: str | None = None,
@@ -255,3 +256,98 @@ async def headers(
     # Cookies are just a special header:
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie
     return {"cookie": cookie, "Some-Number": some_number, "more_numbers": more_numbers}
+
+
+@app.get("/image/{image_id}")
+async def get_image(image_id: int) -> Image:
+    print("getting image", image_id)
+    return Image(url=HttpUrl("http://image.jpg", scheme="http"), name="Future Scam")
+
+
+@app.get("/image2/{image_id}")
+async def get_image2(image_id: int) -> Image:
+    print("getting image", image_id)
+    return dict(  # dict also works
+        url=HttpUrl("http://image.jpg", scheme="http"),
+        name="Future Scam",
+        secret="password",  # attributes not in the return type are filtered out
+    )
+
+
+class InternalImage(Image):
+    secret: str
+
+
+@app.get("/image3/{image_id}")
+async def get_image3(image_id: int) -> Image:
+    print("getting image", image_id)
+    return InternalImage(
+        url=HttpUrl("http://image.jpg", scheme="http"),
+        name="Future Scam",
+        secret="password",  # attributes not in the return type are filtered out
+    )
+
+
+@app.post("/image/{image_id}")
+async def upload_image(
+    image_id: int, image: Image
+) -> int:  # TODO response schema title?
+    print("saving image", image)
+    return image_id
+
+
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+    full_name: str | None = None
+
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: str | None = None
+
+
+# specify response_model if you need to please the type checker
+@app.post("/user/", response_model=UserOut)
+async def create_user(user: UserIn) -> Any:
+    # if we marked the return type as UserOut, mypy would probably complain that we are returning a UserIn.
+    # hence we specify Any and the response_model instead
+    return user  # password is not defined in output model so it will be dropped
+
+
+class BaseUser(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: str | None = None
+
+
+class UserIn2(BaseUser):
+    password: str
+
+
+# alternatively, you can use inheritance, and only the parent fields will be returned
+@app.post("/user2/")
+async def create_user2(user: UserIn2) -> BaseUser:
+    return user
+
+
+@app.get("/portal")
+async def get_portal(teleport: bool = False) -> Response:
+    if teleport:
+        return RedirectResponse(url="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    return JSONResponse(content={"message": "Here's your interdimensional portal."})
+
+
+@app.get("/item2", response_model=Item, response_model_exclude_unset=True)
+async def read_item2():
+    # by default, this would be converted to an Item and return all the default values,
+    # eg description = None
+    # but using response_model_exclude_unset=True, only the values actually set will be returned
+    # you can also use
+    # - response_model_exclude_defaults=True
+    # - response_model_exclude_none=True
+    # - response_model_exclude
+    # - response_model_include
+    return {"name": "Foo", "price": 50.2}

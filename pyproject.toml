@@ -10,6 +10,7 @@ packages = [{include = "learning_fastapi"}]
 python = "^3.11"
 fastapi = "^0.95.2"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
+pydantic = {extras = ["email"], version = "^1.10.8"}
 
 
 [build-system]
