@@ -1,8 +1,20 @@
 from enum import Enum
 from typing import Annotated, Any, Union
 
-from fastapi import Body, Cookie, FastAPI, Form, Header, Path, Query, Response, status
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import (
+    Body,
+    Cookie,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    Path,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
+from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
 from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 app = FastAPI()
@@ -367,3 +379,41 @@ async def create_item(name: str):
 @app.post("/login/")
 async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
     return {"username": username}
+
+
+# files are uploaded using form data so also require python-multipart
+# with File, the whole file will be read as bytes into memory
+# suitable for small files
+@app.post("/files/")
+async def create_file(file: Annotated[bytes, File(description="A file read as bytes")]):
+    return {"file_size": len(file)}
+
+
+# UploadFile uses a spooled file, which stores a limited amount in memory and the rest on disk
+@app.post("/uploadfile/")
+async def create_upload_file(
+    file: UploadFile,
+):  # can also do Annotated[UploadFile, File(...)]
+    return {"filename": file.filename}
+
+
+@app.post("/uploadfiles/")
+async def create_upload_files(files: list[UploadFile]):
+    return {"filenames": [file.filename for file in files]}
+
+
+@app.get("/uploadfiles")
+async def main():
+    content = """
+<body>
+<form action="/uploadfile/" enctype="multipart/form-data" method="post">
+<input name="file" type="file">
+<input type="submit">
+</form>
+<form action="/uploadfiles/" enctype="multipart/form-data" method="post">
+<input name="files" type="file" multiple>
+<input type="submit">
+</form>
+</body>
+    """
+    return HTMLResponse(content=content)
