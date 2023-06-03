@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Annotated, Any, Union
 
-from fastapi import Body, Cookie, FastAPI, Header, Path, Query, Response, status
+from fastapi import Body, Cookie, FastAPI, Form, Header, Path, Query, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
@@ -299,7 +299,7 @@ async def upload_image(
 class UserIn(BaseModel):
     username: str
     password: str
-    email: EmailStr
+    email: EmailStr  # requires pydantic[email]
     full_name: str | None = None
 
 
@@ -360,3 +360,10 @@ async def read_item2():
 @app.post("/item", status_code=status.HTTP_201_CREATED)
 async def create_item(name: str):
     return {"name": name}
+
+
+# Oauth2 for example requires fields pass in as form fields, rather than a json body
+# requires python-multipart
+@app.post("/login/")
+async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
+    return {"username": username}
