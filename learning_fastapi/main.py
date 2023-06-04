@@ -8,13 +8,22 @@ from fastapi import (
     File,
     Form,
     Header,
+    HTTPException,
     Path,
     Query,
+    Request,
     Response,
     UploadFile,
     status,
 )
-from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    PlainTextResponse,
+)
 from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 app = FastAPI()
@@ -417,3 +426,38 @@ async def main():
 </body>
     """
     return HTMLResponse(content=content)
+
+
+@app.get("/error")
+async def error():
+    raise HTTPException(status_code=404, detail="Not found")
+
+
+class UnicornException(Exception):
+    def __init__(self, name: str):
+        self.name = name
+
+
+@app.exception_handler(UnicornException)
+async def unicorn_exception_handler(request: Request, exc: UnicornException):
+    return JSONResponse(
+        status_code=418,
+        content={"message": f"Oops! {exc.name} did something. There goes a rainbow..."},
+    )
+
+
+@app.get("/unicorns/{name}")
+async def read_unicorn(name: str):
+    if name == "yolo":
+        raise UnicornException(name=name)
+    return {"unicorn_name": name}
+
+
+# override a built in handler
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    if None:
+        return await request_validation_exception_handler(
+            request, exc
+        )  # you can reuse the default handler
+    return PlainTextResponse(str(exc), status_code=400)
