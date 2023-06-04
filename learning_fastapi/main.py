@@ -16,6 +16,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.encoders import jsonable_encoder
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import (
@@ -103,6 +104,10 @@ class Item(BaseModel):
 
 @app.put("/items/{item_id}")
 def update_item(item_id: int, item: Item):
+    # you can use jsonable_encoder convert many types into jsonable equivalents, eg:
+    # - datetime -> str (ISO)
+    # - pydantic models -> dict
+    print(jsonable_encoder(item))
     return {"item_name": item.name, "item_id": item_id}
 
 
