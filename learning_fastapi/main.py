@@ -16,25 +16,35 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
-    RedirectResponse,
     PlainTextResponse,
+    RedirectResponse,
 )
 from pydantic import BaseModel, EmailStr, Field, HttpUrl
 
 app = FastAPI()
 
 
-@app.get("/")
+@app.get("/", deprecated=True)
 def read_root():
+    """
+    This is a fastapi endpoint:
+
+    - **Hello**: world
+    """
     return {"Hello": "World"}
 
 
-@app.get("/item/{item_id}")
+class Tags(Enum):
+    items = "items"
+    users = "users"
+
+
+@app.get("/item/{item_id}", tags=[Tags.items])
 async def read_item(
     item_id: str,
     q: str | None = None,
@@ -101,7 +111,7 @@ class User(BaseModel):
     full_name: str | None = None
 
 
-@app.put("/multi_body")
+@app.put("/multi_body", tags=[Tags.items, Tags.users])
 async def multi_body(
     item: Item,
     user: User,
@@ -331,7 +341,7 @@ class UserOut(BaseModel):
 
 
 # specify response_model if you need to please the type checker
-@app.post("/user/", response_model=UserOut)
+@app.post("/user/", response_model=UserOut, tags=[Tags.users])
 async def create_user(user: UserIn) -> Any:
     # if we marked the return type as UserOut, mypy would probably complain that we are returning a UserIn.
     # hence we specify Any and the response_model instead
