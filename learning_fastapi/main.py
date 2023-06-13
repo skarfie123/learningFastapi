@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from learning_fastapi.routers import (
+    dependencies,
     examples,
     forms_and_files,
     items_db,
@@ -108,3 +109,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 app.include_router(items_db.router)
+
+app.include_router(dependencies.router)
