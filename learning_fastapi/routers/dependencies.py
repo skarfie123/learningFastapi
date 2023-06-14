@@ -80,3 +80,39 @@ async def read_items_dataclass(
     ]  # for classes you can omit the Depends arg and the main type hint will be used
 ):
     return commons
+
+
+# dependecies can depend on other dependecies, generating a dependency tree
+
+
+def query_extractor(q: str | None = None):
+    return q
+
+
+def query_or_cookie_extractor(
+    q: Annotated[str, Depends(query_extractor)],
+    last_query: Annotated[str | None, Cookie()] = None,
+):
+    if not q:
+        return last_query
+    return q
+
+
+@router.get("/items_query/")
+async def read_query(
+    query_or_default: Annotated[str, Depends(query_or_cookie_extractor)]
+):
+    return {"q_or_cookie": query_or_default}
+
+
+def get_value():
+    pass
+
+
+# dependencies are cached by default, unless use_cache=False is passed to the Depends() decorator
+# the cache means that if a dependency is depended on by multiple dependencies of a endpoint, it will only be called once
+@router.get("/needy_dependency/")
+async def needy_dependency(
+    fresh_value: Annotated[str, Depends(get_value, use_cache=False)]
+):
+    return {"fresh_value": fresh_value}
