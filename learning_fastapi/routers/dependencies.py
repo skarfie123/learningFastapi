@@ -1,9 +1,15 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
 
-router = APIRouter(prefix="/dependencies", tags=["dependencies"])
+router = APIRouter(
+    prefix="/dependencies",
+    tags=["dependencies"],
+    # dependencies can also be passed to the router to affect all endpoints
+    # you also do it for the whole app the same way on the main FastAPI instance
+    dependencies=[],
+)
 
 
 # the function parameters are used as query parameters in every endpoint that depends on this function
@@ -116,3 +122,29 @@ async def needy_dependency(
     fresh_value: Annotated[str, Depends(get_value, use_cache=False)]
 ):
     return {"fresh_value": fresh_value}
+
+
+async def verify_token(x_token: Annotated[str, Header()]):
+    if x_token != "fake-super-secret-token":
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+
+# for dependencies that need to be run but don't return or you don't need a value from, pass in to the decorator
+@router.get("/items_token/", dependencies=[Depends(verify_token)])
+async def read_items_token():
+    return [{"item": "Foo"}, {"item": "Bar"}]
+
+
+# you can also use dependencies with yield to do cleanup tasks after the request is finished
+async def get_db():
+    db = "DBSession()"
+    try:
+        yield db
+    finally:
+        # db.close()
+        pass
+
+
+def get_file():
+    with open("./somefile.txt") as f:
+        yield f
