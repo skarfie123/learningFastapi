@@ -13,6 +13,7 @@ from learning_fastapi.routers import (
     params,
     request_body,
     response_models,
+    security,
 )
 
 app = FastAPI(
@@ -111,3 +112,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.include_router(items_db.router)
 
 app.include_router(dependencies.router)
+
+app.include_router(security.router)
