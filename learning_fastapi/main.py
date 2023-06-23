@@ -1,6 +1,7 @@
-from typing import Annotated
+import time
+from typing import Annotated, Any, Awaitable, Callable
 
-from fastapi import Cookie, FastAPI, Header, HTTPException, Request, status
+from fastapi import Cookie, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -114,3 +115,14 @@ app.include_router(items_db.router)
 app.include_router(dependencies.router)
 
 app.include_router(security.router)
+
+
+@app.middleware("http")
+async def add_process_time_header(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
