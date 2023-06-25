@@ -1,9 +1,10 @@
 import time
-from typing import Annotated, Any, Awaitable, Callable
+from typing import Annotated, Awaitable, Callable
 
 from fastapi import Cookie, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from learning_fastapi.routers import (
@@ -126,3 +127,14 @@ async def add_process_time_header(
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+
+# allow frontends hosted on specified "origins" to call this backend
+origins = ["http://localhost:5173"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,  # allow cookies and other credentials
+    allow_methods=["*"],  # allow all methods, eg PUT, POST
+    allow_headers=["*"],  # allow all headers
+)
