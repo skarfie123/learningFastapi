@@ -11,11 +11,12 @@ from learning_fastapi.routers import (
     dependencies,
     examples,
     forms_and_files,
-    items_db,
+    items_fake_db,
     params,
     request_body,
     response_models,
     security,
+    sql,
 )
 
 app = FastAPI(
@@ -111,7 +112,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return PlainTextResponse(str(exc), status_code=400)
 
 
-app.include_router(items_db.router)
+app.include_router(items_fake_db.router)
 
 app.include_router(dependencies.router)
 
@@ -138,3 +139,5 @@ app.add_middleware(
     allow_methods=["*"],  # allow all methods, eg PUT, POST
     allow_headers=["*"],  # allow all headers
 )
+
+app.include_router(sql.router)
