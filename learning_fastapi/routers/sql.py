@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
 # region: database
 
@@ -20,7 +19,10 @@ engine = create_engine(
 # a sessionmaker is a class that will be used to create a session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
+
 
 # endregion
 # region: models
