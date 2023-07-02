@@ -1,6 +1,7 @@
 import time
 from typing import Annotated, Any, Awaitable, Callable
 
+import uvicorn
 from fastapi import Cookie, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -171,3 +172,7 @@ app.include_router(background_tasks.router)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+if __name__ == "__main__":
+    # for use with a debugger
+    uvicorn.run(app, host="0.0.0.0", port=8000)
