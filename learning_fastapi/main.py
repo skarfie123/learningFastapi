@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from learning_fastapi.routers import (
+    background_tasks,
     dependencies,
     examples,
     forms_and_files,
@@ -141,3 +142,5 @@ app.add_middleware(
 )
 
 app.include_router(sql.router)
+
+app.include_router(background_tasks.router)
