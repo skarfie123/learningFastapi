@@ -1,11 +1,12 @@
 import time
-from typing import Annotated, Awaitable, Callable
+from typing import Annotated, Any, Awaitable, Callable
 
 from fastapi import Cookie, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 from learning_fastapi.routers import (
     background_tasks,
@@ -20,10 +21,33 @@ from learning_fastapi.routers import (
     sql,
 )
 
+tags_metadata: list[dict[str, Any]] = [
+    {
+        "name": "users",
+        "description": "Operations with users. The **login** logic is also here.",
+    },
+    {
+        "name": "items",
+        "description": "Manage items. So _fancy_ they have their own docs.",
+        "externalDocs": {
+            "description": "Items external docs",
+            "url": "https://fastapi.tiangolo.com/",
+        },
+    },
+]
+
 app = FastAPI(
     # override the response for validation errors based on our custom handler
     # https://github.com/tiangolo/fastapi/discussions/8298#discussioncomment-5150722
     responses={422: {"model": str}},
+    title="Learning FastAPI",
+    description="""
+    App used to learn FastAPI.
+
+    Based on the excellent FastAPI [tutorial](https://fastapi.tiangolo.com/tutorial)
+    
+    """,
+    openapi_tags=tags_metadata,
 )
 
 
@@ -144,3 +168,6 @@ app.add_middleware(
 app.include_router(sql.router)
 
 app.include_router(background_tasks.router)
+
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
