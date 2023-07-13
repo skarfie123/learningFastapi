@@ -1,7 +1,16 @@
+from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    Session,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
 
 # region: database
 
@@ -26,31 +35,33 @@ class Base(DeclarativeBase):
 
 # endregion
 # region: models
-# TODO: switch to SQLAlchemy 2.0 types
+# https://docs.sqlalchemy.org/en/20/changelog/whatsnew_20.html#orm-declarative-models
+
+indexed_pk = Annotated[int, mapped_column(primary_key=True, index=True)]
 
 
 class DBUser(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_active = Column(Boolean, default=True)
+    id: Mapped[indexed_pk]
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    hashed_password: Mapped[str]
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     # user.items: List[DBItem]
-    items = relationship("DBItem", back_populates="owner")
+    items: Mapped[List["DBItem"]] = relationship(back_populates="owner")
 
 
 class DBItem(Base):
     __tablename__ = "items"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
-    owner_id = Column(Integer, ForeignKey("users.id"))
+    id: Mapped[indexed_pk]
+    title: Mapped[str] = mapped_column(index=True)
+    description: Mapped[str] = mapped_column(index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     # item.owner: DBUser
-    owner = relationship("DBUser", back_populates="items")
+    owner: Mapped[DBUser] = relationship(back_populates="items")
 
 
 # endregion
